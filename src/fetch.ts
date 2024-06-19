@@ -1,11 +1,10 @@
-import { EventSourceMessage, getBytes, getLines, getMessages } from './parse';
+import { getBytes, getLines, getMessages } from './parse';
 
 export const EventStreamContentType = 'text/event-stream';
 
 const DefaultRetryInterval = 1000;
-const LastEventId = 'last-event-id';
 
-export interface FetchEventSourceInit extends RequestInit {
+export interface FetchEventSourceInit<T> extends RequestInit {
     /**
      * The request headers. FetchEventSource only supports the Record<string,string> format.
      */
@@ -23,7 +22,7 @@ export interface FetchEventSourceInit extends RequestInit {
      * EventSource.onmessage, this callback is called for _all_ events,
      * even ones with a custom `event` field.
      */
-    onmessage?: (ev: EventSourceMessage) => void;
+    onmessage?: (ev: T) => void;
 
     /**
      * Called when a response finishes. If you don't expect the server to kill
@@ -53,7 +52,7 @@ export interface FetchEventSourceInit extends RequestInit {
     fetch?: typeof fetch;
 }
 
-export function fetchEventSource(input: RequestInfo, {
+export function fetchEventSource<T = any>(input: RequestInfo, {
     signal: inputSignal,
     headers: inputHeaders,
     onopen: inputOnOpen,
@@ -63,7 +62,7 @@ export function fetchEventSource(input: RequestInfo, {
     openWhenHidden,
     fetch: inputFetch,
     ...rest
-}: FetchEventSourceInit) {
+}: FetchEventSourceInit<T>) {
     return new Promise<void>((resolve, reject) => {
         // make a copy of the input headers since we may modify it below:
         const headers = { ...inputHeaders };
@@ -109,18 +108,8 @@ export function fetchEventSource(input: RequestInfo, {
                 });
 
                 await onopen(response);
-                
-                await getBytes(response.body!, getLines(getMessages(id => {
-                    if (id) {
-                        // store the id and send it back on the next retry:
-                        headers[LastEventId] = id;
-                    } else {
-                        // don't send the last-event-id header anymore:
-                        delete headers[LastEventId];
-                    }
-                }, retry => {
-                    retryInterval = retry;
-                }, onmessage)));
+
+                await getBytes(response.body!, getLines(getMessages<T>(onmessage)));
 
                 onclose?.();
                 dispose();
@@ -146,7 +135,7 @@ export function fetchEventSource(input: RequestInfo, {
     });
 }
 
-function defaultOnOpen(response: Response) {
+async function defaultOnOpen(response: Response) {
     const contentType = response.headers.get('content-type');
     if (!contentType?.startsWith(EventStreamContentType)) {
         throw new Error(`Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`);

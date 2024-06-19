@@ -1,9 +1,9 @@
 {
-  "name": "@microsoft/fetch-event-source",
-  "version": "2.0.1",
-  "description": "A better API for making Event Source requests, with all the features of fetch()",
+  "name": "@jacob-z/fetch-event-source",
+  "version": "0.0.1-alpha",
+  "description": "fetch event source from microsoft, used for higgz",
   "homepage": "https://github.com/Azure/fetch-event-source#readme",
-  "repository": "github:Azure/fetch-event-source",
+  "repository": "github:JaobZyy/fetch-event-source",
   "bugs": {
     "url": "https://github.com/Azure/fetch-event-source/issues"
   },
