@@ -3,8 +3,7 @@ import { getBytes, getLines, getMessages } from './parse';
 export const EventStreamContentType = 'text/event-stream';
 
 const DefaultRetryInterval = 1000;
-
-export interface FetchEventSourceInit<T> extends RequestInit {
+export type FetchEventSourceInitOnly = {
     /**
      * The request headers. FetchEventSource only supports the Record<string,string> format.
      */
@@ -22,7 +21,7 @@ export interface FetchEventSourceInit<T> extends RequestInit {
      * EventSource.onmessage, this callback is called for _all_ events,
      * even ones with a custom `event` field.
      */
-    onmessage?: (ev: T) => void;
+    onmessage?: (ev: string | Record<keyof any, unknown>) => void;
 
     /**
      * Called when a response finishes. If you don't expect the server to kill
@@ -52,7 +51,10 @@ export interface FetchEventSourceInit<T> extends RequestInit {
     fetch?: typeof fetch;
 }
 
-export function fetchEventSource<T = any>(input: RequestInfo, {
+
+export type  FetchEventSourceInit = Omit<RequestInit, "headers"> & FetchEventSourceInitOnly;
+
+export function fetchEventSource(input: RequestInfo, {
     signal: inputSignal,
     headers: inputHeaders,
     onopen: inputOnOpen,
@@ -62,7 +64,7 @@ export function fetchEventSource<T = any>(input: RequestInfo, {
     openWhenHidden,
     fetch: inputFetch,
     ...rest
-}: FetchEventSourceInit<T>) {
+}: FetchEventSourceInit) {
     return new Promise<void>((resolve, reject) => {
         // make a copy of the input headers since we may modify it below:
         const headers = { ...inputHeaders };
@@ -109,7 +111,7 @@ export function fetchEventSource<T = any>(input: RequestInfo, {
 
                 await onopen(response);
 
-                await getBytes(response.body!, getLines(getMessages<T>(onmessage)));
+                await getBytes(response.body!, getLines(getMessages(onmessage)));
 
                 onclose?.();
                 dispose();
