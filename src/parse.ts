@@ -19,7 +19,7 @@ export interface EventSourceMessage {
  * @param onChunk A function that will be called on each new byte chunk in the stream.
  * @returns {Promise<void>} A promise that will be resolved when the stream closes.
  */
-export async function getBytes(stream: ReadableStream<Uint8Array>, onChunk: (arr: Uint8Array) => void) {
+export async function getBytes(stream: ReadableStream<Uint8Array>, onChunk: (arr: Uint8Array) => void):Promise<void> {
     const reader = stream.getReader();
     let result: ReadableStreamReadResult<Uint8Array>;
     while (!(result = await reader.read()).done) {
@@ -103,7 +103,7 @@ export function getLines(onLine: (line: Uint8Array) => void) {
  * @param onMessage A function that will be called on each message.
  * @returns A function that should be called for each incoming line buffer.
  */
-export function getMessages<T>(onMessage?: (msg: T) => void) {
+export function getMessages(onMessage?: (msg: string | Record<keyof any, unknown>) => void) {
     const decoder = new TextDecoder();
 
     // return a function that can process each incoming line buffer:
