@@ -145,6 +145,8 @@ export function fetchEventSource(input: RequestInfo, {
                         dispose();
                         reject(innerErr);
                     }
+                }else {
+                    reject(err)
                 }
             }
         }
