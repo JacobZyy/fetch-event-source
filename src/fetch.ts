@@ -146,7 +146,7 @@ export function fetchEventSource(input: RequestInfo, {
                         reject(innerErr);
                     }
                 }else {
-                    reject(err)
+                    onerror?.(err)
                 }
             }
         }
