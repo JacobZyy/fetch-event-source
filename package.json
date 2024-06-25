@@ -1,6 +1,6 @@
 {
   "name": "@jacob-z/fetch-event-source",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "fetch event source from microsoft, used for higgz",
   "homepage": "https://github.com/Azure/fetch-event-source#readme",
   "repository": "github:JaobZyy/fetch-event-source",
