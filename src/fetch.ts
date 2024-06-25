@@ -47,12 +47,14 @@ export type FetchEventSourceInitOnly = {
      */
     openWhenHidden?: boolean;
 
+    abortAsError?: boolean;
+
     /** The Fetch function to use. Defaults to window.fetch */
     fetch?: typeof fetch;
 }
 
 
-export type  FetchEventSourceInit = Omit<RequestInit, "headers"> & FetchEventSourceInitOnly;
+export type FetchEventSourceInit = Omit<RequestInit, "headers"> & FetchEventSourceInitOnly;
 
 export function fetchEventSource(input: RequestInfo, {
     signal: inputSignal,
@@ -62,6 +64,7 @@ export function fetchEventSource(input: RequestInfo, {
     onclose,
     onerror,
     openWhenHidden,
+    abortAsError,
     fetch: inputFetch,
     ...rest
 }: FetchEventSourceInit) {
@@ -93,9 +96,22 @@ export function fetchEventSource(input: RequestInfo, {
         }
 
         // if the incoming signal aborts, dispose resources and resolve:
-        inputSignal?.addEventListener('abort', () => {
+        inputSignal?.addEventListener('abort', (event) => {
             dispose();
-            resolve(); // don't waste time constructing/logging errors
+            if(!abortAsError) {
+                resolve() 
+                return
+            }
+
+            const target = event.target as AbortSignal
+            const { reason = '' } = target
+            if (reason instanceof Error) {
+                reject(reason)
+            } else if (typeof reason === 'string') {
+                reject(new Error(reason))
+            } else {
+                reject("sse aborted!");
+            }
         });
 
         const fetch = inputFetch ?? window.fetch;
